@@ -12,7 +12,9 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
-  Activity
+  Activity,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 
@@ -45,11 +47,23 @@ export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelec
 
   return (
     <>
+      {/* Top Enterprise Banner */}
+      <div className="bg-slate-900 text-white text-[11px] font-semibold py-1.5 px-4 text-center border-b border-slate-800 flex items-center justify-center gap-2">
+        <span className="inline-flex items-center gap-1 text-cyan-400 font-bold px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800/60 uppercase text-[9px] tracking-wider">
+          <Zap className="w-3 h-3 text-cyan-400" /> Enterprise v2.4
+        </span>
+        <span className="hidden sm:inline text-slate-300">Multi-Modal AI Engine active with Real-Time Vision HUD & Speech Analytics</span>
+        <button onClick={() => setActiveTab('interview')} className="underline text-indigo-300 hover:text-white font-bold ml-1 flex items-center gap-1">
+          Try Mock Chamber <ArrowRight className="w-3 h-3 inline" />
+        </button>
+      </div>
+
+      {/* Main Glass Navbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
-            {/* Enterprise Logo */}
+            {/* Enterprise Brand Logo */}
             <div 
               onClick={() => setActiveTab('dashboard')} 
               className="flex items-center gap-3 cursor-pointer group"
@@ -64,12 +78,12 @@ export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelec
                   Interview<span className="text-indigo-600">IQ</span>
                 </span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-extrabold tracking-widest px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  ENTERPRISE AI
+                  AI PLATFORM
                 </span>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
+            {/* Navigation Links */}
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -98,12 +112,12 @@ export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelec
               })}
             </nav>
 
-            {/* Controls Right */}
+            {/* Right Status Controls */}
             <div className="flex items-center gap-3">
-              {/* System Status Pill */}
+              {/* Latency & Status */}
               <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800">
                 <Activity className="w-3 h-3 text-emerald-600 animate-pulse" />
-                <span>AI Models Online</span>
+                <span>12ms Latency</span>
               </div>
 
               {/* Language Selector */}

@@ -30,6 +30,12 @@
   background: #94A3B8;
 }
 
+/* Background Subtle Grid Texture */
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 /* Enterprise Glassmorphism & Card Styles */
 .glass-panel {
   background: rgba(255, 255, 255, 0.95);
@@ -79,5 +85,24 @@
 }
 
 .gradient-bg-hero {
-  background: linear-gradient(135deg, #312E81 0%, #4338CA 40%, #1E1B4B 100%);
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 40%, #4338CA 100%);
+}
+
+/* Enterprise Interactive Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338CA 0%, #3730A3 100%);
+  box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
