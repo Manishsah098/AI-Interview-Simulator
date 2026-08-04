@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Check, X, Lightbulb, ChevronDown } from 'lucide-react';
+import { Play, RotateCcw, Check, X, Lightbulb } from 'lucide-react';
 
 const DEFAULT_CODE = {
   javascript: `// Two Sum - Find two numbers that add up to target
@@ -46,9 +46,9 @@ function highlight(code, lang) {
   return code
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/(\/\/.*$|#.*$)/gm, '<span style="color:#64748B">$1</span>')
-    .replace(/(".*?"|'.*?'|`.*?`)/g, '<span style="color:#10B981">$1</span>')
-    .replace(/\b(\d+)\b/g, '<span style="color:#F59E0B">$1</span>')
-    .replace(kwRegex, '<span style="color:#6366F1;font-weight:600">$1</span>');
+    .replace(/(".*?"|'.*?'|`.*?`)/g, '<span style="color:#059669">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span style="color:#D97706">$1</span>')
+    .replace(kwRegex, '<span style="color:#4F46E5;font-weight:700">$1</span>');
 }
 
 export default function CodeEditor({ problem }) {
@@ -103,16 +103,16 @@ export default function CodeEditor({ problem }) {
   };
 
   return (
-    <div className="glass-panel rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
+    <div className="glass-panel rounded-2xl border border-slate-200 bg-white flex flex-col overflow-hidden shadow-sm">
       {/* Editor Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-900/40">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-rose-500 opacity-70" />
-            <div className="w-3 h-3 rounded-full bg-amber-400 opacity-70" />
-            <div className="w-3 h-3 rounded-full bg-emerald-500 opacity-70" />
+            <div className="w-3 h-3 rounded-full bg-rose-400 opacity-80" />
+            <div className="w-3 h-3 rounded-full bg-amber-400 opacity-80" />
+            <div className="w-3 h-3 rounded-full bg-emerald-400 opacity-80" />
           </div>
-          <span className="text-xs text-slate-400 font-mono font-medium">
+          <span className="text-xs text-slate-700 font-mono font-bold">
             {problem?.title || 'Two Sum.js'}
           </span>
         </div>
@@ -125,8 +125,8 @@ export default function CodeEditor({ problem }) {
                 onClick={() => handleLangChange(l)}
                 className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
                   lang === l
-                    ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >
                 {l === 'javascript' ? 'JS' : 'Python'}
@@ -135,7 +135,7 @@ export default function CodeEditor({ problem }) {
           </div>
           <button
             onClick={() => { setCode(DEFAULT_CODE[lang]); setOutput(null); setAiTip(null); }}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 transition-colors"
             title="Reset"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -143,7 +143,7 @@ export default function CodeEditor({ problem }) {
           <button
             onClick={runCode}
             disabled={isRunning}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 disabled:opacity-50 transition-opacity"
           >
             <Play className="w-3.5 h-3.5" />
             {isRunning ? 'Running...' : 'Run Code'}
@@ -152,11 +152,11 @@ export default function CodeEditor({ problem }) {
       </div>
 
       {/* Code Area */}
-      <div className="relative flex flex-1 overflow-hidden min-h-[300px]">
+      <div className="relative flex flex-1 overflow-hidden min-h-[300px] bg-slate-950">
         {/* Line numbers */}
-        <div className="bg-slate-950/60 border-r border-slate-800/60 px-3 pt-4 text-right min-w-[48px] select-none">
+        <div className="bg-slate-900 border-r border-slate-800 px-3 pt-4 text-right min-w-[48px] select-none">
           {code.split('\n').map((_, i) => (
-            <div key={i} className="text-[11px] font-mono text-slate-600 leading-6">{i + 1}</div>
+            <div key={i} className="text-[11px] font-mono text-slate-500 leading-6">{i + 1}</div>
           ))}
         </div>
         {/* Textarea (editable) */}
@@ -169,19 +169,19 @@ export default function CodeEditor({ problem }) {
         />
         {/* Highlighted layer */}
         <pre
-          className="flex-1 font-mono text-sm leading-6 p-4 pointer-events-none select-none overflow-hidden text-slate-300"
+          className="flex-1 font-mono text-sm leading-6 p-4 pointer-events-none select-none overflow-hidden text-slate-100"
           dangerouslySetInnerHTML={{ __html: highlight(code, lang) }}
         />
       </div>
 
       {/* Output Console */}
       {output !== null && (
-        <div className="border-t border-slate-800/80 bg-slate-950/80 p-4">
+        <div className="border-t border-slate-200 bg-slate-50 p-4">
           <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Console Output</p>
           <div className="space-y-1">
             {output.map((line, i) => (
-              <div key={i} className={`flex items-center gap-2 text-xs font-mono ${
-                line.includes('Error') ? 'text-rose-400' : 'text-emerald-400'
+              <div key={i} className={`flex items-center gap-2 text-xs font-mono font-bold ${
+                line.includes('Error') ? 'text-rose-600' : 'text-emerald-700'
               }`}>
                 {line.includes('Error') ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
                 {line}
@@ -193,17 +193,17 @@ export default function CodeEditor({ problem }) {
 
       {/* AI Tip */}
       {aiTip && (
-        <div className="border-t border-indigo-500/20 bg-indigo-500/5 p-4">
+        <div className="border-t border-indigo-200 bg-indigo-50/70 p-4">
           <div className="flex items-start gap-2">
-            <Lightbulb className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+            <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-[10px] font-bold text-amber-400 uppercase mb-1">AI Code Review</p>
+              <p className="text-[10px] font-bold text-amber-700 uppercase mb-1">AI Code Review</p>
               <div className="flex gap-3 mb-2">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-mono">Time: {aiTip.timeComplexity}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-mono">Space: {aiTip.spaceComplexity}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono">Style: {aiTip.style}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200 font-mono font-bold">Time: {aiTip.timeComplexity}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-mono font-bold">Space: {aiTip.spaceComplexity}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono font-bold">Style: {aiTip.style}</span>
               </div>
-              <p className="text-xs text-slate-300">{aiTip.tip}</p>
+              <p className="text-xs text-slate-800 font-medium">{aiTip.tip}</p>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Mic, MicOff, Activity, AlertTriangle, Volume2, Zap } from 'lucide-react';
+import { Mic, MicOff, Activity, AlertTriangle, Volume2 } from 'lucide-react';
 import { voiceAnalyzer } from '../services/speechService';
 
 export default function AudioAnalyzer({ isListening, onTranscriptUpdate, onMetricsUpdate }) {
@@ -59,9 +59,9 @@ export default function AudioAnalyzer({ isListening, onTranscriptUpdate, onMetri
         const h = barsRef.current[i];
         const x = i * (barW + 2);
         const grad = ctx.createLinearGradient(0, H / 2 - h / 2, 0, H / 2 + h / 2);
-        grad.addColorStop(0, isListening ? '#6366F1' : '#334155');
-        grad.addColorStop(0.5, isListening ? '#06B6D4' : '#1E293B');
-        grad.addColorStop(1, isListening ? '#6366F1' : '#334155');
+        grad.addColorStop(0, isListening ? '#4F46E5' : '#CBD5E1');
+        grad.addColorStop(0.5, isListening ? '#0891B2' : '#94A3B8');
+        grad.addColorStop(1, isListening ? '#4F46E5' : '#CBD5E1');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.roundRect(x, H / 2 - h / 2, barW, h, 3);
@@ -79,19 +79,19 @@ export default function AudioAnalyzer({ isListening, onTranscriptUpdate, onMetri
   const fillerEntries = Object.entries(metrics.fillerMap || {}).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col gap-4">
+    <div className="glass-panel p-5 rounded-2xl border border-slate-200 bg-white flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-          {isListening ? <Mic className="w-4 h-4 text-indigo-400 animate-pulse" /> : <MicOff className="w-4 h-4 text-slate-500" />}
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+          {isListening ? <Mic className="w-4 h-4 text-indigo-600 animate-pulse" /> : <MicOff className="w-4 h-4 text-slate-400" />}
           Voice Intelligence
         </h3>
         <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${
           metrics.speedRating === 'Optimal'
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
             : metrics.speedRating === 'Fast'
-            ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+            ? 'bg-rose-100 text-rose-800 border-rose-200'
+            : 'bg-amber-100 text-amber-800 border-amber-200'
         }`}>
           <Volume2 className="w-3 h-3" />
           {metrics.speedRating} Speed
@@ -99,39 +99,39 @@ export default function AudioAnalyzer({ isListening, onTranscriptUpdate, onMetri
       </div>
 
       {/* Waveform */}
-      <div className="w-full rounded-xl bg-slate-950/80 border border-slate-800/60 p-2 overflow-hidden">
+      <div className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2 overflow-hidden">
         <canvas ref={canvasRef} className="w-full" style={{ height: '64px' }} />
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 text-center">
-          <p className="text-2xl font-bold font-mono text-indigo-300">{metrics.wpm || 0}</p>
-          <p className="text-[10px] text-slate-500 font-medium mt-0.5">WPM</p>
+        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <p className="text-2xl font-bold font-mono text-indigo-600">{metrics.wpm || 0}</p>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">WPM</p>
         </div>
-        <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 text-center">
-          <p className={`text-2xl font-bold font-mono ${metrics.fillerCount > 5 ? 'text-rose-400' : 'text-emerald-400'}`}>
+        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <p className={`text-2xl font-bold font-mono ${metrics.fillerCount > 5 ? 'text-rose-600' : 'text-emerald-600'}`}>
             {metrics.fillerCount}
           </p>
-          <p className="text-[10px] text-slate-500 font-medium mt-0.5">Filler Words</p>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Filler Words</p>
         </div>
-        <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 text-center">
-          <p className={`text-2xl font-bold font-mono ${metrics.clarityScore > 80 ? 'text-cyan-400' : 'text-amber-400'}`}>
+        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <p className={`text-2xl font-bold font-mono ${metrics.clarityScore > 80 ? 'text-cyan-600' : 'text-amber-600'}`}>
             {metrics.clarityScore}%
           </p>
-          <p className="text-[10px] text-slate-500 font-medium mt-0.5">Clarity</p>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Clarity</p>
         </div>
       </div>
 
       {/* Filler Word Breakdown */}
       {fillerEntries.length > 0 && (
-        <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-3">
-          <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-3">
+          <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wider mb-2 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Filler Words Detected
           </p>
           <div className="flex flex-wrap gap-1.5">
             {fillerEntries.map(([word, count]) => (
-              <span key={word} className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/25 font-mono font-semibold">
+              <span key={word} className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 font-mono font-semibold">
                 "{word}" × {count}
               </span>
             ))}
@@ -141,11 +141,11 @@ export default function AudioAnalyzer({ isListening, onTranscriptUpdate, onMetri
 
       {/* Scrolling Transcript */}
       {transcript && (
-        <div className="bg-slate-950 rounded-xl border border-slate-800/60 p-3 max-h-20 overflow-y-auto">
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-3 max-h-20 overflow-y-auto">
           <p className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-            <Activity className="w-3 h-3 text-cyan-500" /> Live Transcript
+            <Activity className="w-3 h-3 text-cyan-600" /> Live Transcript
           </p>
-          <p className="text-xs text-slate-300 font-mono leading-relaxed">{transcript}</p>
+          <p className="text-xs text-slate-800 font-mono leading-relaxed">{transcript}</p>
         </div>
       )}
     </div>
