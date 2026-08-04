@@ -74,6 +74,7 @@
 .gradient-text-indigo {
   background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #0891B2 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
