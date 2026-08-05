@@ -16,8 +16,8 @@ const DIFFICULTIES = ['Beginner', 'Intermediate', 'Advanced'];
 
 const EMOTION_EMOJI = { Happy: '😊', Neutral: '😐', Nervous: '😟', Surprised: '😮', Frustrated: '😠' };
 
-export default function LiveInterview({ language }) {
-  const [phase, setPhase] = useState('setup'); // 'setup' | 'live' | 'complete'
+export default function LiveInterview({ language, userProfile, setUserProfile }) {
+  const [phase, setPhase] = useState(() => userProfile ? 'setup' : 'register'); // 'register' | 'setup' | 'live' | 'complete'
   const [config, setConfig] = useState({ role: 'Software Engineer', type: 'Technical', difficulty: 'Intermediate' });
   const [questions, setQuestions] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -35,7 +35,23 @@ export default function LiveInterview({ language }) {
   const [confidence, setConfidence] = useState(82);
   const timerRef = useRef(null);
 
+  // Mock Google Authentication Dialogue popup state
+  const [showGooglePopup, setShowGooglePopup] = useState(false);
+  const [popupStep, setPopupStep] = useState(1); // 1: Inputs, 2: Loading verification, 3: Completed
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [popupError, setPopupError] = useState('');
+
   const totalQuestions = 5;
+
+  // Reactively track sign-out or session updates
+  useEffect(() => {
+    if (!userProfile) {
+      setPhase('register');
+    } else if (phase === 'register') {
+      setPhase('setup');
+    }
+  }, [userProfile]);
 
   // Timer
   useEffect(() => {
@@ -47,10 +63,16 @@ export default function LiveInterview({ language }) {
 
   const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
+  const getEnhancedRole = () => {
+    const company = userProfile?.company || 'google.com';
+    const name = userProfile?.name || 'Candidate';
+    return `${config.role} at ${company} (Candidate Name: ${name})`;
+  };
+
   const startInterview = async () => {
     setPhase('live');
     setIsGenerating(true);
-    const q1 = await GeminiService.generateQuestion(config.role, config.difficulty, config.type, [], language);
+    const q1 = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, [], language);
     setQuestions([q1]);
     setIsGenerating(false);
     speakQuestion(q1);
@@ -75,7 +97,7 @@ export default function LiveInterview({ language }) {
     setAnswers(answersArr);
 
     // Evaluate answer
-    const ev = await GeminiService.evaluateAnswer(questions[currentQ], transcript, config.role, { ...visionMetrics, ...finalVoice });
+    const ev = await GeminiService.evaluateAnswer(questions[currentQ], transcript, getEnhancedRole(), { ...visionMetrics, ...finalVoice });
     const evsArr = [...evaluations, ev];
     setEvaluations(evsArr);
 
@@ -83,7 +105,7 @@ export default function LiveInterview({ language }) {
       generateFinalReport(answersArr, evsArr);
     } else {
       setIsGenerating(true);
-      const nextQ = await GeminiService.generateQuestion(config.role, config.difficulty, config.type, answersArr.map(a => a.a));
+      const nextQ = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, answersArr.map(a => a.a));
       setQuestions(prev => [...prev, nextQ]);
       setCurrentQ(currentQ + 1);
       setIsGenerating(false);
@@ -99,7 +121,10 @@ export default function LiveInterview({ language }) {
     const clarityScore = voiceMetrics.clarityScore || 88;
 
     const rep = {
-      name: 'Candidate',
+      id: Date.now(),
+      name: userProfile?.name || 'Candidate',
+      avatar: userProfile?.avatar || '👨‍💻',
+      company: userProfile?.company || 'google.com',
       overallScore: avgScore,
       technicalScore: Math.round(avgScore * 0.95),
       communicationScore: clarityScore,
@@ -117,6 +142,15 @@ export default function LiveInterview({ language }) {
       status: 'Shortlisted'
     };
 
+    // Save completed reports to localStorage for the RecruiterPortal
+    try {
+      const existing = JSON.parse(localStorage.getItem('completed_interviews') || '[]');
+      existing.unshift(rep);
+      localStorage.setItem('completed_interviews', JSON.stringify(existing));
+    } catch (err) {
+      console.warn('LocalStorage error while saving report:', err.message);
+    }
+
     setFinalReport(rep);
     setPhase('complete');
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -128,7 +162,216 @@ export default function LiveInterview({ language }) {
     }
   };
 
-  // Setup Phase
+  const renderGoogleModal = () => {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div className="bg-white rounded-3xl max-w-sm w-full border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col font-sans text-left">
+          
+          {/* Header */}
+          <div className="p-6 text-center border-b border-slate-100">
+            {/* Google Logo SVG */}
+            <div className="flex justify-center mb-4">
+              <svg className="w-10 h-10 select-none" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-800">Sign in with Google</h3>
+            <p className="text-[11px] text-slate-500 mt-1">to continue to <span className="font-bold text-slate-700">InterviewIQ AI</span></p>
+          </div>
+
+          {/* Modal Steps */}
+          {popupStep === 1 && (
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Google Email Address</label>
+                <input
+                  type="email"
+                  placeholder="e.g. user@gmail.com"
+                  value={registerEmail}
+                  onChange={(e) => { setRegisterEmail(e.target.value); setPopupError(''); }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Display Candidate Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Alex Mercer"
+                  value={registerName}
+                  onChange={(e) => { setRegisterName(e.target.value); setPopupError(''); }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:outline-none focus:border-indigo-600 focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+
+              {popupError && (
+                <p className="text-[10px] text-rose-600 font-bold">{popupError}</p>
+              )}
+
+              <div className="flex items-center justify-between text-xs text-indigo-600 font-bold pt-2">
+                <span className="hover:underline cursor-pointer" onClick={() => { setRegisterName('Alex Mercer'); setRegisterEmail('alex.mercer@gmail.com'); }}>Use Demo Details</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!registerName || !registerEmail) {
+                      setPopupError('Please fill in both name and email.');
+                      return;
+                    }
+                    setPopupStep(2);
+                    setTimeout(() => {
+                      setPopupStep(3);
+                      setTimeout(() => {
+                        setShowGooglePopup(false);
+                        setUserProfile({
+                          name: registerName.trim(),
+                          email: registerEmail.trim(),
+                          avatar: '👨‍💻',
+                          company: 'google.com'
+                        });
+                      }, 900);
+                    }, 1600);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-extrabold shadow-md shadow-indigo-600/20 cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+          {popupStep === 2 && (
+            <div className="p-10 flex flex-col items-center justify-center space-y-4">
+              <div className="w-10 h-10 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin" />
+              <div className="text-center">
+                <p className="text-xs font-bold text-slate-800 animate-pulse">Verifying Identity</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Connecting to accounts.google.com...</p>
+              </div>
+            </div>
+          )}
+
+          {popupStep === 3 && (
+            <div className="p-10 flex flex-col items-center justify-center space-y-3 bg-emerald-50/50">
+              <div className="w-12 h-12 bg-emerald-100 border border-emerald-300 rounded-full flex items-center justify-center text-emerald-600 text-xl font-bold">
+                ✓
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-black text-emerald-800">Success!</p>
+                <p className="text-[10px] text-slate-500 mt-1">Authenticated as <strong>{registerName}</strong></p>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-500 font-bold uppercase">
+            <span>English (United States)</span>
+            <div className="flex gap-2">
+              <span className="hover:underline cursor-pointer">Help</span>
+              <span className="hover:underline cursor-pointer">Privacy</span>
+              <span className="hover:underline cursor-pointer">Terms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 1. Registration Phase
+  if (phase === 'register') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] font-bold tracking-widest uppercase mb-4">
+            <Bot className="w-3.5 h-3.5" /> Authentication Portal
+          </div>
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Interview Registration</h2>
+          <p className="text-slate-500 text-xs mt-1">Authenticate with Google to customize and unlock your mock interview chamber.</p>
+        </div>
+
+        <div className="glass-panel p-8 rounded-3xl border border-slate-200 bg-white shadow-sm space-y-6">
+          <div className="text-center p-5 bg-slate-50 border border-slate-200/60 rounded-2xl">
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              You are launching a benchmark evaluation modeled after <strong>Google's Software Engineering & Technical Recruiting standards</strong>. Please authenticate to create your assessment profile.
+            </p>
+          </div>
+
+          {/* Google SSO Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setPopupStep(1);
+              setShowGooglePopup(true);
+            }}
+            className="w-full flex items-center justify-center gap-3 px-5 py-3.5 border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-sm hover:scale-[1.005] transition-all cursor-pointer bg-white"
+          >
+            {/* Google Multi-colored G logo */}
+            <svg className="w-4 h-4 select-none" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span>Register with Google.com</span>
+          </button>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-4 text-[9px] text-slate-400 font-extrabold uppercase tracking-widest">Or Register Manually</span>
+            <div className="flex-grow border-t border-slate-200"></div>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (!registerName || !registerEmail) return;
+            setUserProfile({
+              name: registerName.trim(),
+              email: registerEmail.trim(),
+              avatar: '👩‍💻',
+              company: 'google.com'
+            });
+          }} className="space-y-4 text-left">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Full Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Jordan Dev"
+                value={registerName}
+                onChange={(e) => setRegisterName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all shadow-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
+              <input
+                type="email"
+                required
+                placeholder="e.g. jordan@google.com"
+                value={registerEmail}
+                onChange={(e) => setRegisterEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition-all shadow-xs"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!registerName || !registerEmail}
+              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.005] transition-all cursor-pointer"
+            >
+              Verify Profile & Start Setup
+            </button>
+          </form>
+        </div>
+
+        {/* Simulated OAuth dialog */}
+        {showGooglePopup && renderGoogleModal()}
+      </div>
+    );
+  }
+
+  // 2. Setup Phase
   if (phase === 'setup') {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">

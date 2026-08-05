@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 
-export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelectedLang }) {
+export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelectedLang, userProfile, setUserProfile }) {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(GeminiService.getApiKey());
   const [showKeyText, setShowKeyText] = useState(false);
@@ -147,6 +147,37 @@ export default function Navbar({ activeTab, setActiveTab, selectedLang, setSelec
                 <Key className="w-3.5 h-3.5 text-indigo-600" />
                 <span className="hidden sm:inline">API Key</span>
               </button>
+
+              {/* User Profile Badge */}
+              {userProfile ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-150">
+                    <span className="text-base select-none">{userProfile.avatar || '👨‍💻'}</span>
+                    <div className="hidden sm:flex flex-col text-left">
+                      <span className="text-[10px] font-bold text-slate-900 leading-tight">{userProfile.name}</span>
+                      <span className="text-[8px] font-bold text-indigo-600 leading-none">{userProfile.company || 'google.com'}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setUserProfile(null);
+                      setActiveTab('dashboard');
+                    }}
+                    className="text-[10px] font-bold text-slate-500 hover:text-rose-600 px-2 py-1.5 rounded-xl hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-all cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setActiveTab('interview');
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs shadow-sm hover:scale-[1.02] transition-all cursor-pointer"
+                >
+                  <span>Sign In</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

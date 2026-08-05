@@ -10,19 +10,48 @@ const CANDIDATES = [
   { id: 4, name: 'Priya Sharma', role: 'AI/ML Engineer', overallScore: 95, atsScore: 94, codingScore: 98, eyeContact: 94, status: 'Shortlisted', avatar: '👩‍🔬' },
 ];
 
-export default function RecruiterPortal() {
-  const [candidates, setCandidates] = useState(CANDIDATES);
+export default function RecruiterPortal({ userProfile }) {
+  const [candidates, setCandidates] = useState(() => {
+    try {
+      const localCompleted = JSON.parse(localStorage.getItem('completed_interviews') || '[]');
+      return [...localCompleted, ...CANDIDATES];
+    } catch (e) {
+      return CANDIDATES;
+    }
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCandidate, setSelectedCandidate] = useState(CANDIDATES[0]);
+  const [selectedCandidate, setSelectedCandidate] = useState(() => {
+    try {
+      const localCompleted = JSON.parse(localStorage.getItem('completed_interviews') || '[]');
+      return localCompleted.length > 0 ? localCompleted[0] : CANDIDATES[0];
+    } catch (e) {
+      return CANDIDATES[0];
+    }
+  });
 
   const toggleStatus = (id) => {
-    setCandidates(prev => prev.map(c => {
-      if (c.id === id) {
-        const next = c.status === 'Shortlisted' ? 'Under Review' : 'Shortlisted';
-        return { ...c, status: next };
+    setCandidates(prev => {
+      const updated = prev.map(c => {
+        if (c.id === id) {
+          const next = c.status === 'Shortlisted' ? 'Under Review' : 'Shortlisted';
+          return { ...c, status: next };
+        }
+        return c;
+      });
+
+      // Sync custom local candidates back to localStorage
+      const localCandidates = updated.filter(c => ![1, 2, 3, 4].includes(c.id));
+      localStorage.setItem('completed_interviews', JSON.stringify(localCandidates));
+      return updated;
+    });
+
+    // Sync selected candidate status locally
+    setSelectedCandidate(prev => {
+      if (prev.id === id) {
+        return { ...prev, status: prev.status === 'Shortlisted' ? 'Under Review' : 'Shortlisted' };
       }
-      return c;
-    }));
+      return prev;
+    });
   };
 
   const handleExportPDF = () => {
