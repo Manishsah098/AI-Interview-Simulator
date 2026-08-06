@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Users, Search, Download, CheckCircle, 
+  Users, Search, Download,
   Brain, MessageSquare, Loader2, Sparkles, AlertCircle, Clock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -283,14 +283,17 @@ export default function RecruiterPortal({ userProfile }) {
         
         // Sync custom local candidates back to localStorage
         const localCandidates = updated.filter(c => ![1, 2, 3, 4].includes(c.id));
-        localStorage.setItem('completed_interviews', JSON.stringify(localCandidates));
+        try { localStorage.setItem('completed_interviews', JSON.stringify(localCandidates)); } catch(e) {}
         return updated;
       });
 
-      setSelectedCandidate(prev => ({
-        ...prev,
-        aiAnalysis: report
-      }));
+      setSelectedCandidate(prev => {
+        // Only update if we're still viewing the same candidate
+        if (prev.id === candidate.id) {
+          return { ...prev, aiAnalysis: report };
+        }
+        return prev;
+      });
 
     } catch (err) {
       console.error("AI Analysis failed:", err);
@@ -346,7 +349,7 @@ export default function RecruiterPortal({ userProfile }) {
             {filtered.map(c => (
               <div
                 key={c.id}
-                onClick={() => { setSelectedCandidate(c); setSelectedTab('overview'); }}
+                onClick={() => { setSelectedCandidate(c); setSelectedTab('overview'); setIsAnalyzing(false); }}
                 className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                   selectedCandidate.id === c.id
                     ? 'bg-purple-50/80 border-purple-300 shadow-md'
