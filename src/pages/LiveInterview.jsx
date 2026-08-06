@@ -72,7 +72,7 @@ export default function LiveInterview({ language, userProfile, setUserProfile })
   const startInterview = async () => {
     setPhase('live');
     setIsGenerating(true);
-    const q1 = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, [], language);
+    const q1 = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, [], language, []);
     setQuestions([q1]);
     setIsGenerating(false);
     speakQuestion(q1);
@@ -105,7 +105,7 @@ export default function LiveInterview({ language, userProfile, setUserProfile })
       generateFinalReport(answersArr, evsArr);
     } else {
       setIsGenerating(true);
-      const nextQ = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, answersArr.map(a => a.a));
+      const nextQ = await GeminiService.generateQuestion(getEnhancedRole(), config.difficulty, config.type, answersArr.map(a => a.a), language, questions);
       setQuestions(prev => [...prev, nextQ]);
       setCurrentQ(currentQ + 1);
       setIsGenerating(false);
@@ -139,7 +139,9 @@ export default function LiveInterview({ language, userProfile, setUserProfile })
       tips: evsArr.map(e => e.idealAnswerTip).filter(Boolean).slice(0, 2),
       duration: formatTime(elapsedSeconds),
       role: config.role,
-      status: 'Shortlisted'
+      status: 'Shortlisted',
+      answers: answersArr,
+      evaluations: evsArr
     };
 
     // Save completed reports to localStorage for the RecruiterPortal
